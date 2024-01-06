@@ -2,12 +2,18 @@ import os
 import time
 import subprocess
 from selenium import webdriver
+from selenium.webdriver.edge.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.alert import Alert
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from youtubesearchpython import VideosSearch
 
-driver = webdriver.Edge()
+edge_options = Options()
+edge_options.add_argument("--guest")
+driver = webdriver.Edge(options=edge_options)
 
 login_link = "https://accounts.spotify.com/en/login"
 song_element = "h4HgbO_Uu1JYg5UGANeQ.wTUruPetkKdWAR1dd6w4"
@@ -15,9 +21,11 @@ name_element = ("Text__TextElement-sc-if376j-0.ksSRyh.encore-text-body-medium.t_
                 "-one-line")
 author_element = "Type__TypeElement-sc-goli3j-0.bGROfl"
 
-# Edit these variables to your liking
-# This is the URL for the playlist you want to download, the default one is for liked songs, edit this to your liking
-playlist_link = "https://open.spotify.com/playlist/4nAy3PPMFuOcX5OjNqTBhF?si=6f3811d096e144d7"
+# Edit these variables to your liking This is the URL for the playlist you want to download, the default one is for
+# liked songs, edit this to your liking Try to share links from the browser and not the desktop app since that would
+# try to open the desktop app instead of the webapp and would throw pop-ups. Alternatively, you can remove everything
+# after the playlist ID, which is just "s=wfjsfhefsd" and it would work from the app
+playlist_link = "https://open.spotify.com/playlist/4nAy3PPMFuOcX5OjNqTBhF"
 # Specify the approixmate number of songs in your playlist
 num_songs = 44
 # Set this to True if you want to get more details on song downloading
@@ -58,6 +66,7 @@ def get_songs():
     time.sleep(5)
     scroll_range = num_songs // 5
     actions = ActionChains(driver)
+    driver.execute_script("window.alert = function() {};")
     song_list = []
     for i in range(scroll_range):
         actions.send_keys(Keys.PAGE_DOWN).perform()
@@ -94,6 +103,8 @@ def download(link, song, authors):
     safe_song = safe_name(song)
     safe_authors = safe_name(authors)
     output_dir = "./downloads"
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
     command = ["yt-dlp", "-x", "--audio-format", "mp3", "--remux-video", "mp3", "--ffmpeg-location",
                ffmpeg_path, "-o",
                os.path.join(output_dir, safe_authors + " - " + safe_song + ".%(ext)s"), link]
