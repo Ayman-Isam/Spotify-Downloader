@@ -24,6 +24,8 @@ num_songs = 44
 debug = False
 # Set this to True if you want to use a private playlist or a liked song playlist
 private = False
+# Set this to the path to your ffmpeg.exe file
+ffmpeg_path = "C:\\ProgramData\\chocolatey\\lib\\ffmpeg\\tools\\ffmpeg\\bin\\"
 
 
 def main():
@@ -93,7 +95,7 @@ def download(link, song, authors):
     safe_authors = safe_name(authors)
     output_dir = "./downloads"
     command = ["yt-dlp", "-x", "--audio-format", "mp3", "--remux-video", "mp3", "--ffmpeg-location",
-               "C:\\ProgramData\\chocolatey\\lib\\ffmpeg\\tools\\ffmpeg\\bin", "-o",
+               ffmpeg_path, "-o",
                os.path.join(output_dir, safe_authors + " - " + safe_song + ".%(ext)s"), link]
     try:
         print(f"Downloading \033[95m{song}\033[0m by \033[96m{authors}\033[0m from link {link}")
