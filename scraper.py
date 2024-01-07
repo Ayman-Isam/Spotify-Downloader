@@ -2,18 +2,41 @@ import os
 import time
 import subprocess
 from selenium import webdriver
-from selenium.webdriver.edge.options import Options
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.alert import Alert
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.edge.options import Options
 from youtubesearchpython import VideosSearch
 
-edge_options = Options()
-edge_options.add_argument("--guest")
-driver = webdriver.Edge(options=edge_options)
+# Edit these variables to your liking
+# This is the URL for the playlist you want to download, edit this to your liking
+playlist_link = "https://open.spotify.com/album/0Ikw6ho559687KCPbSjr0K?si=Mz6VywqBR0-Ky-0LkB37VQ"
+# Specify the approixmate number of songs in your playlist
+num_songs = 25
+# Set this to True if you want to get more details on song downloading like download speed, size and progress
+debug = False
+# Set this to True if you want to use a private playlist or a liked song playlist
+private = False
+# Set this to the path to your ffmpeg.exe file
+ffmpeg_path = "C:\\ProgramData\\chocolatey\\lib\\ffmpeg\\tools\\ffmpeg\\bin\\"
+# Set this to true if trying to download albums from artists
+album = True
+# Set this option to the browser you're using, options are "Chrome", "Firefox" and "Edge". If you decide to use
+# firefox, you have to download the webdriver and include its path. For Chrome, you have to install the chrome test
+# browser. Edge has a built-in webdriver so that's not needed
+browser = "Chrome"
+
+if browser == "Chrome":
+    driver = webdriver.Chrome()
+
+elif browser == "Edge":
+    edge_options = Options()
+    edge_options.add_argument("--guest")
+    driver = webdriver.Edge(options=edge_options)
+
+elif browser == "Firefox":
+    driver = webdriver.Firefox()
 
 login_link = "https://accounts.spotify.com/en/login"
 song_element = "h4HgbO_Uu1JYg5UGANeQ.wTUruPetkKdWAR1dd6w4"
@@ -21,19 +44,6 @@ name_element = ("Text__TextElement-sc-if376j-0.ksSRyh.encore-text-body-medium.t_
                 "-one-line")
 author_element = "Type__TypeElement-sc-goli3j-0.bGROfl"
 
-# Edit these variables to your liking This is the URL for the playlist you want to download, the default one is for
-# liked songs, edit this to your liking Try to share links from the browser and not the desktop app since that would
-# try to open the desktop app instead of the webapp and would throw pop-ups. Alternatively, you can remove everything
-# after the playlist ID, which is just "s=wfjsfhefsd" and it would work from the app
-playlist_link = "https://open.spotify.com/playlist/4nAy3PPMFuOcX5OjNqTBhF"
-# Specify the approixmate number of songs in your playlist
-num_songs = 44
-# Set this to True if you want to get more details on song downloading
-debug = False
-# Set this to True if you want to use a private playlist or a liked song playlist
-private = False
-# Set this to the path to your ffmpeg.exe file
-ffmpeg_path = "C:\\ProgramData\\chocolatey\\lib\\ffmpeg\\tools\\ffmpeg\\bin\\"
 
 
 def main():
@@ -61,12 +71,25 @@ def login():
 
 
 def get_songs():
-    driver.get(playlist_link)
+    # To get the web link of the playlist to not have open in app popups
+    playlist_link_index = playlist_link.index('?') if '?' in playlist_link else None
+    if playlist_link_index:
+        playlist_web_link = playlist_link[:playlist_link_index]
+    else:
+        playlist_web_link = playlist_link
+    driver.get(playlist_web_link)
     driver.maximize_window()
-    time.sleep(5)
+    try:
+        time.sleep(3)
+        cookie_popup = driver.find_element(By.ID, "onetrust-accept-btn-handler")
+        cookie_popup.click()
+        body = driver.find_element(By.TAG_NAME, "body")
+        time.sleep(2)
+        body.click()
+    except (NoSuchElementException, TimeoutException):
+        pass
     scroll_range = num_songs // 5
     actions = ActionChains(driver)
-    driver.execute_script("window.alert = function() {};")
     song_list = []
     for i in range(scroll_range):
         actions.send_keys(Keys.PAGE_DOWN).perform()
@@ -75,7 +98,11 @@ def get_songs():
             song_divs = driver.find_elements(By.CSS_SELECTOR, "div." + song_element)
             for song_div in song_divs:
                 song = song_div.find_element(By.CSS_SELECTOR, "div." + name_element).text.strip()
-                authors = song_div.find_element(By.CSS_SELECTOR, "div." + author_element).text.strip()
+                if album:
+                    authors_span = song_div.find_element(By.CSS_SELECTOR, "span." + author_element)
+                    authors = authors_span.text.strip()
+                else:
+                    authors = song_div.find_element(By.CSS_SELECTOR, "div." + author_element).text.strip()
                 if (song, authors) not in song_list:
                     song_list.append((song, authors))
     return song_list
