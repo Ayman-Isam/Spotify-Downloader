@@ -11,9 +11,9 @@ from youtubesearchpython import VideosSearch
 
 # Edit these variables to your liking
 # This is the URL for the playlist you want to download, edit this to your liking
-playlist_link = "https://open.spotify.com/album/0Ikw6ho559687KCPbSjr0K?si=Mz6VywqBR0-Ky-0LkB37VQ"
+playlist_link = "https://open.spotify.com/playlist/23C00A7OMiPgeSVZCG0nWE"
 # Specify the approixmate number of songs in your playlist
-num_songs = 25
+num_songs = 700
 # Set this to True if you want to get more details on song downloading like download speed, size and progress
 debug = False
 # Set this to True if you want to use a private playlist or a liked song playlist
@@ -21,11 +21,11 @@ private = False
 # Set this to the path to your ffmpeg.exe file
 ffmpeg_path = "C:\\ProgramData\\chocolatey\\lib\\ffmpeg\\tools\\ffmpeg\\bin\\"
 # Set this to true if trying to download albums from artists
-album = True
+album = False
 # Set this option to the browser you're using, options are "Chrome", "Firefox" and "Edge". If you decide to use
 # firefox, you have to download the webdriver and include its path. For Chrome, you have to install the chrome test
 # browser. Edge has a built-in webdriver so that's not needed
-browser = "Chrome"
+browser = "Edge"
 
 if browser == "Chrome":
     driver = webdriver.Chrome()
@@ -39,16 +39,15 @@ elif browser == "Firefox":
     driver = webdriver.Firefox()
 
 login_link = "https://accounts.spotify.com/en/login"
-song_element = "h4HgbO_Uu1JYg5UGANeQ.wTUruPetkKdWAR1dd6w4"
-name_element = ("Text__TextElement-sc-if376j-0.ksSRyh.encore-text-body-medium.t_yrXoUO3qGsJS4Y6iXX.standalone-ellipsis"
-                "-one-line")
-author_element = "Type__TypeElement-sc-goli3j-0.bGROfl"
-
+song_element = "iCQtmPqY0QvkumAOuCjr"
+name_element = ("Text__TextElement-sc-if376j-0.ksSRyh.encore-text-body-medium.t_yrXoUO3qGsJS4Y6iXX.standalone-ellipsis-one-line")
+author_element = "Text__TextElement-sc-if376j-0.gYdBJW.encore-text-body-small"
 
 
 def main():
     if private:
         login()
+    time.sleep(2)
     songs = get_songs()
     get_links(songs)
     driver.quit()
@@ -67,8 +66,6 @@ def login():
     login_button = driver.find_element(By.ID, "login-button")
     login_button.click()
 
-    time.sleep(2)
-
 
 def get_songs():
     # To get the web link of the playlist to not have open in app popups
@@ -79,8 +76,9 @@ def get_songs():
         playlist_web_link = playlist_link
     driver.get(playlist_web_link)
     driver.maximize_window()
+    time.sleep(2)
     try:
-        time.sleep(3)
+        time.sleep(10)
         cookie_popup = driver.find_element(By.ID, "onetrust-accept-btn-handler")
         cookie_popup.click()
         body = driver.find_element(By.TAG_NAME, "body")
